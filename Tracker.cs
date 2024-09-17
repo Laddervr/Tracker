@@ -4,36 +4,40 @@ using UnityEngine.Networking;
 using System.Text;
 using System.Collections;
 
-[BepInPlugin("com.yourname.gorillatag.playertracker", "Player Tracker with Webhook", "1.0.0")]
+[BepInPlugin("com.yourname.gorillatag.playertracker", "Always Enabled Player Tracker with Webhook", "1.0.0")]
 public class PlayerTracker : BaseUnityPlugin
 {
     private const string WebhookUrl = "YOUR_DISCORD_WEBHOOK_URL";  // <-- Replace with your Discord webhook URL
 
-    void OnEnable()
+    // This method runs when the mod is loaded and keeps the hooks always active
+    void Start()
     {
-        // Hook into the game's player join/leave events
+        // Always keep hooks enabled for player join, leave, and room join events
         PlayerManager.OnPlayerJoin += LogPlayerJoin;
         PlayerManager.OnPlayerLeave += LogPlayerLeave;
-    }
-
-    void OnDisable()
-    {
-        // Unhook events when mod is disabled
-        PlayerManager.OnPlayerJoin -= LogPlayerJoin;
-        PlayerManager.OnPlayerLeave -= LogPlayerLeave;
+        RoomManager.OnRoomJoin += LogRoomJoin;
     }
 
     // Log when a player joins the game
     void LogPlayerJoin(Player player)
     {
-        string logMessage = $"Player {player.Name} joined at {System.DateTime.Now}\n";
+        string currentRoom = RoomManager.GetCurrentRoom(); // Assuming RoomManager has this method
+        string logMessage = $"Player {player.Name} joined the game in room {currentRoom} at {System.DateTime.Now}\n";
         StartCoroutine(SendToDiscord(logMessage));
     }
 
     // Log when a player leaves the game
     void LogPlayerLeave(Player player)
     {
-        string logMessage = $"Player {player.Name} left at {System.DateTime.Now}\n";
+        string currentRoom = RoomManager.GetCurrentRoom(); // Assuming RoomManager has this method
+        string logMessage = $"Player {player.Name} left the game from room {currentRoom} at {System.DateTime.Now}\n";
+        StartCoroutine(SendToDiscord(logMessage));
+    }
+
+    // Log when the player changes rooms or enters a new room
+    void LogRoomJoin(string roomCode)
+    {
+        string logMessage = $"Room code {roomCode} was joined at {System.DateTime.Now}\n";
         StartCoroutine(SendToDiscord(logMessage));
     }
 
